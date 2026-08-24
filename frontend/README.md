@@ -1,16 +1,33 @@
-# React + Vite
+# frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Project Collab의 프론트엔드입니다. 과제에서 프론트엔드는 선택 항목이라 현재는 뼈대만 있습니다.
 
-Currently, two official plugins are available:
+## 실행
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev      # http://localhost:5173
+```
 
-## React Compiler
+백엔드가 8080에서 함께 떠 있어야 API 호출이 동작합니다.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| 명령 | 하는 일 |
+| :-- | :-- |
+| `npm run dev` | 개발 서버 실행 (HMR) |
+| `npm run build` | 프로덕션 빌드 (`dist/`) |
+| `npm run lint` | oxlint 검사 |
 
-## Expanding the Oxlint configuration
+## 구성
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+```
+src/
+├─ main.jsx     진입점
+├─ App.jsx      최상위 컴포넌트 (현재 자리표시자)
+└─ index.css    전역 스타일
+```
+
+- **React 19 · Vite** — 설정이 가장 가벼운 조합을 골랐습니다.
+- **추가 라이브러리 없음** — 화면이 하나뿐이라 라우터도 상태관리 라이브러리도 넣지 않았습니다.
+  화면이 늘어 주소로 구분할 필요가 생기면 그때 추가합니다.
+- **개발 서버 프록시** — `/api` 요청을 `localhost:8080`으로 전달합니다.
+  백엔드에 CORS 설정을 넣지 않아도 되도록 한 조치이며, 자세한 이유는 `vite.config.js` 주석에 적었습니다.
