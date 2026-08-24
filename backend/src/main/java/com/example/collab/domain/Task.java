@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
@@ -37,9 +39,21 @@ public class Task {
 	 * id만으로 찾으면 다른 프로젝트의 작업 id를 넣었을 때 남의 데이터가 그대로 나간다.
 	 *
 	 * fetch = LAZY인 이유는 ProjectMember의 설명과 같다(기본값 EAGER의 N+1 방지).
+	 *
+	 * @OnDelete(CASCADE)는 하이버네이트가 스키마를 만들 때 이 외래키에
+	 * "on delete cascade"를 붙이라는 뜻이다. 그러면 프로젝트 한 행을 지우는 순간
+	 * 그 프로젝트를 참조하는 작업 행을 DB가 함께 지운다.
+	 *
+	 * JPA의 CascadeType.REMOVE를 쓰지 않은 이유:
+	 * 그쪽은 자식을 전부 메모리로 읽어와 한 건씩 DELETE를 내보낸다.
+	 * 작업이 500개면 DELETE가 500번 나간다. DB에 맡기면 한 문장으로 끝난다.
+	 *
+	 * 주의: 이 방식은 ddl-auto가 생성한 스키마에만 적용된다.
+	 * 스키마를 따로 관리하게 되면 그쪽에도 같은 제약을 넣어야 한다.
 	 */
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "project_id", nullable = false)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	private Project project;
 
 	/**

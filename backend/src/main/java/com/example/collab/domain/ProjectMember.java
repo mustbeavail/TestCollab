@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -51,9 +53,12 @@ public class ProjectMember {
 	 *                @ManyToOne의 기본값은 EAGER라 멤버 목록 100건을 읽으면 프로젝트 조회가
 	 *                뒤따라 여러 번 나가는 N+1 문제가 생긴다. 그래서 명시적으로 LAZY로 바꾼다.
 	 * optional = false : 이 연관관계가 비어 있을 수 없다는 뜻으로, 외래키 컬럼에 NOT NULL이 붙는다.
+	 * @OnDelete(CASCADE) : 외래키에 "on delete cascade"를 붙인다. 프로젝트가 삭제되면
+	 *                      그 프로젝트의 멤버 행도 DB가 함께 지운다(Task.project 설명 참고).
 	 */
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "project_id", nullable = false)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	private Project project;
 
 	/** 이 멤버가 가리키는 사용자. 매핑 의도는 위 project와 같다. */
