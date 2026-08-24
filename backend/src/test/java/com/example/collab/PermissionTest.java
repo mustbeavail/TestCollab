@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +50,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *   B의 작업   — 담당자 없음
  */
 @SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 @DisplayName("권한 규칙")
 class PermissionTest {

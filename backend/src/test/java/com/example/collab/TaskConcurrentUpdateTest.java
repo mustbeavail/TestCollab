@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -34,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * 대신 각 테스트 시작 시 데이터를 직접 정리한다.
  */
 @SpringBootTest
+@ActiveProfiles("test")
 @DisplayName("동시 수정 처리")
 class TaskConcurrentUpdateTest {
 
