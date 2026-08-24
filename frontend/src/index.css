@@ -1,0 +1,23 @@
+/*
+ * 전역 스타일.
+ *
+ * Vite 기본 템플릿에 딸려 오던 데모용 스타일(로고 애니메이션, 카드 레이아웃 등)은
+ * 지웠다. 화면을 만들 때 기준이 될 최소한의 값만 남긴다.
+ */
+
+:root {
+  font-family: system-ui, 'Segoe UI', 'Malgun Gothic', sans-serif;
+  line-height: 1.6;
+  color: #1a1a1a;
+  background-color: #ffffff;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}

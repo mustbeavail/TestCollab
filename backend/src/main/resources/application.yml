@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: collab
+
+  # H2 인메모리 DB — 별도 설치 없이 앱과 함께 뜨고 앱이 내려가면 사라진다.
+  datasource:
+    url: jdbc:h2:mem:collab;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    # 영속성 컨텍스트를 뷰 렌더링까지 열어두지 않는다(커넥션 점유 시간 단축).
+    open-in-view: false
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
