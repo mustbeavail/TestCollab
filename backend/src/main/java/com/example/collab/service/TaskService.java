@@ -10,7 +10,9 @@ import com.example.collab.repository.ProjectMemberRepository;
 import com.example.collab.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -150,8 +152,36 @@ public class TaskService {
 	                                 TaskStatus status, Long assigneeId, Pageable pageable) {
 		requireMember(projectId, userId);
 
-		return taskRepository.search(projectId, keyword, status, assigneeId, pageable)
+		return taskRepository.search(projectId, keyword, status, assigneeId, stableSort(pageable))
 				.map(TaskResponse::from);
+	}
+
+	/**
+	 * 정렬 기준 맨 뒤에 id 내림차순을 덧붙여, 순서가 항상 하나로 정해지게 만든다.
+	 *
+	 * 왜 필요한가:
+	 * 기본 정렬인 createdAt은 값이 같은 작업이 얼마든지 생긴다(한 번에 여러 건을 만들면
+	 * 밀리초까지 같아진다). 정렬 기준이 그것뿐이면 동률인 행들의 순서를 DB가 마음대로 정하고,
+	 * 그 순서는 조회할 때마다 달라질 수 있다.
+	 * 페이징은 "정렬된 결과의 n번째부터 m개"를 잘라 오는 방식이라,
+	 * 1페이지와 2페이지 사이에 순서가 바뀌면 같은 작업이 두 페이지에 겹쳐 나오거나
+	 * 아예 어느 페이지에도 안 나오는 일이 생긴다.
+	 * id는 중복되지 않으므로, 마지막 기준으로 두면 동률이 남지 않는다.
+	 *
+	 * 이미 id로 정렬하고 있으면(클라이언트가 sort=id로 요청한 경우) 그대로 둔다.
+	 * 그때는 덧붙이지 않아도 순서가 하나로 정해진다.
+	 *
+	 * @param pageable 클라이언트가 요청한(또는 기본값이 채워진) 페이지 정보
+	 * @return id 정렬이 보장된 페이지 정보
+	 */
+	private Pageable stableSort(Pageable pageable) {
+		Sort sort = pageable.getSort();
+		if (sort.getOrderFor("id") != null) return pageable;
+
+		return PageRequest.of(
+				pageable.getPageNumber(),
+				pageable.getPageSize(),
+				sort.and(Sort.by(Sort.Direction.DESC, "id")));
 	}
 
 	/** 작업 한 건을 돌려준다. 그 프로젝트의 멤버만 볼 수 있다. */
