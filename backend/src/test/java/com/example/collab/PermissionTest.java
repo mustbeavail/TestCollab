@@ -26,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -92,9 +94,6 @@ class PermissionTest {
 				.isEqualTo(expected);
 	}
 
-	/** AssertJ의 람다 타입. 위 헬퍼가 받기 위해 별칭으로 둔다. */
-	private interface ThrowingCallable extends org.assertj.core.api.ThrowableAssert.ThrowingCallable {
-	}
 
 	@Nested
 	@DisplayName("비멤버 차단")
@@ -315,7 +314,6 @@ class PermissionTest {
 			entityManager.clear();
 
 			Task task = taskRepository.findById(taskInA).orElseThrow();
-			assertThat(task).isNotNull();
 			assertThat(task.getAssignee()).isNull();
 		}
 	}

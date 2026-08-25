@@ -58,7 +58,7 @@ function App() {
 	const selectedProject = projects.find((p) => p.id === projectId) ?? null
 
 	return (
-		<div className="app">
+		<>
 			<header className="header">
 				<div className="header__title">
 					<h1>Project Collab</h1>
@@ -94,7 +94,7 @@ function App() {
 					</section>
 				)}
 			</div>
-		</div>
+		</>
 	)
 }
 

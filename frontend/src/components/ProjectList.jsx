@@ -31,7 +31,7 @@ export default function ProjectList({ projects, selectedId, loading, userId, onS
 	}
 
 	return (
-		<aside className="panel sidebar">
+		<aside className="panel">
 			<h2>내 프로젝트</h2>
 
 			{loading ? (

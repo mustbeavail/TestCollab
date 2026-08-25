@@ -90,7 +90,7 @@ export default function TaskBoard({ userId, project }) {
 	const totalPages = page?.totalPages ?? 0
 
 	return (
-		<section className="panel board">
+		<section className="panel">
 			<header className="board__header">
 				<div>
 					<h2>{project.name}</h2>

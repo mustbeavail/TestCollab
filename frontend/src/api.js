@@ -5,7 +5,7 @@
  */
 
 /** 상태 코드나 code로 분기해야 해서(예: 409 충돌) 문자열이 아니라 오류 클래스로 만든다. */
-export class ApiError extends Error {
+class ApiError extends Error {
 	constructor(status, code, message) {
 		super(message)
 		this.status = status

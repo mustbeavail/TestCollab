@@ -16,7 +16,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -45,13 +44,6 @@ public class TaskService {
 	private ProjectMember requireMember(Long projectId, Long userId) {
 		return projectMemberRepository.findByProjectIdAndUserId(projectId, userId)
 				.orElseThrow(() -> new CollabException(ErrorCode.NOT_PROJECT_MEMBER));
-	}
-
-	/** 반드시 requireMember 뒤에 호출한다. */
-	private void requireRole(ProjectMember member, Role... allowed) {
-		if (!Arrays.asList(allowed).contains(member.getRole())) {
-			throw new CollabException(ErrorCode.NO_PERMISSION);
-		}
 	}
 
 	/** 수정·삭제 조건: OWNER·ADMIN이거나 그 작업의 담당자 본인. 담당자는 없을 수 있다. */

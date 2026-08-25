@@ -26,7 +26,6 @@ public enum ErrorCode {
 
 	// --- 404 : 대상이 없는 경우 ---
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
-	PROJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."),
 	TASK_NOT_FOUND(HttpStatus.NOT_FOUND, "작업을 찾을 수 없습니다."),
 
 	// --- 409 : 요청은 옳으나 현재 상태와 충돌하는 경우 ---
