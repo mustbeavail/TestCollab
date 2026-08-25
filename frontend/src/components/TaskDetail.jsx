@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import * as api from '../api'
 import { TASK_STATUS } from '../labels'
+import Modal from './Modal'
 
 /**
  * 작업 상세·수정 창. 수정 권한이 없으면 같은 내용을 읽기 전용으로 보여준다.
@@ -20,15 +21,6 @@ export default function TaskDetail({ userId, projectId, task, members, editable,
 	const [error, setError] = useState(null)
 	const [conflict, setConflict] = useState(false)
 	const [saving, setSaving] = useState(false)
-
-	// Esc로 닫는다. 창이 사라질 때 리스너도 함께 걷어낸다.
-	useEffect(() => {
-		const onKeyDown = (e) => {
-			if (e.key === 'Escape') onClose()
-		}
-		window.addEventListener('keydown', onKeyDown)
-		return () => window.removeEventListener('keydown', onKeyDown)
-	}, [onClose])
 
 	const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }))
 
@@ -80,99 +72,89 @@ export default function TaskDetail({ userId, projectId, task, members, editable,
 	}
 
 	return (
-		// 바깥을 누르면 닫는다. 안쪽 클릭은 창에서 전파를 막는다.
-		<div className="modal-backdrop" onClick={onClose}>
-			<div className="modal" onClick={(e) => e.stopPropagation()}>
-				<header className="modal__header">
-					<h3>작업 상세</h3>
-					<button type="button" className="icon-button" onClick={onClose} aria-label="닫기">
-						×
-					</button>
-				</header>
+		<Modal title="작업 상세" onClose={onClose}>
+			<form className="modal__body" onSubmit={submit}>
+				<label>
+					제목
+					<input
+						type="text"
+						value={form.title}
+						onChange={(e) => set('title', e.target.value)}
+						maxLength={200}
+						disabled={!editable}
+						required
+					/>
+				</label>
 
-				<form className="modal__body" onSubmit={submit}>
+				<label>
+					설명
+					<textarea
+						rows={4}
+						value={form.description}
+						onChange={(e) => set('description', e.target.value)}
+						maxLength={2000}
+						disabled={!editable}
+					/>
+				</label>
+
+				<div className="modal__row">
 					<label>
-						제목
-						<input
-							type="text"
-							value={form.title}
-							onChange={(e) => set('title', e.target.value)}
-							maxLength={200}
+						상태
+						<select
+							value={form.status}
+							onChange={(e) => set('status', e.target.value)}
 							disabled={!editable}
-							required
-						/>
+						>
+							{Object.entries(TASK_STATUS).map(([value, label]) => (
+								<option key={value} value={value}>
+									{label}
+								</option>
+							))}
+						</select>
 					</label>
 
 					<label>
-						설명
-						<textarea
-							rows={4}
-							value={form.description}
-							onChange={(e) => set('description', e.target.value)}
-							maxLength={2000}
+						담당자
+						<select
+							value={form.assigneeId}
+							onChange={(e) => set('assigneeId', e.target.value)}
 							disabled={!editable}
-						/>
+						>
+							<option value="">미지정</option>
+							{members.map((m) => (
+								<option key={m.userId} value={m.userId}>
+									{m.name}
+								</option>
+							))}
+						</select>
 					</label>
+				</div>
 
-					<div className="modal__row">
-						<label>
-							상태
-							<select
-								value={form.status}
-								onChange={(e) => set('status', e.target.value)}
-								disabled={!editable}
-							>
-								{Object.entries(TASK_STATUS).map(([value, label]) => (
-									<option key={value} value={value}>
-										{label}
-									</option>
-								))}
-							</select>
-						</label>
+				<p className="hint">version {form.version} · 이 값이 서버와 다르면 저장이 거절됩니다.</p>
 
-						<label>
-							담당자
-							<select
-								value={form.assigneeId}
-								onChange={(e) => set('assigneeId', e.target.value)}
-								disabled={!editable}
-							>
-								<option value="">미지정</option>
-								{members.map((m) => (
-									<option key={m.userId} value={m.userId}>
-										{m.name}
-									</option>
-								))}
-							</select>
-						</label>
+				{conflict && (
+					<div className="banner banner--warn">
+						다른 사용자가 먼저 이 작업을 수정했습니다. 입력한 내용은 그대로 두었습니다.
+						<button type="button" onClick={reload}>
+							최신 내용 불러오기
+						</button>
 					</div>
+				)}
+				{error && <p className="banner banner--error">{error}</p>}
 
-					<p className="hint">version {form.version} · 이 값이 서버와 다르면 저장이 거절됩니다.</p>
-
-					{conflict && (
-						<div className="banner banner--warn">
-							다른 사용자가 먼저 이 작업을 수정했습니다. 입력한 내용은 그대로 두었습니다.
-							<button type="button" onClick={reload}>
-								최신 내용 불러오기
-							</button>
-						</div>
-					)}
-					{error && <p className="banner banner--error">{error}</p>}
-
-					{editable ? (
-						<div className="modal__actions">
-							<button type="button" className="danger" onClick={remove}>
-								삭제
-							</button>
-							<button type="submit" disabled={saving || !form.title.trim()}>
-								{saving ? '저장 중…' : '저장'}
-							</button>
-						</div>
-					) : (
-						<p className="hint">담당자 본인이거나 소유자·관리자만 수정·삭제할 수 있습니다.</p>
-					)}
-				</form>
-			</div>
-		</div>
+				{editable ? (
+					<div className="modal__actions">
+						<button type="button" className="danger" onClick={remove}>
+							삭제
+						</button>
+						<button type="submit" disabled={saving || !form.title.trim()}>
+							{saving ? '저장 중…' : '저장'}
+						</button>
+					</div>
+				) : (
+					<p className="hint">담당자 본인이거나 소유자·관리자만 수정·삭제할 수 있습니다.</p>
+				)}
+			</form>
+		</Modal>
 	)
 }

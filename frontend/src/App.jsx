@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import * as api from './api'
 import ProjectList from './components/ProjectList'
 import TaskBoard from './components/TaskBoard'
+import UserCreate from './components/UserCreate'
 import UserSwitcher from './components/UserSwitcher'
 
 /**
@@ -10,18 +11,36 @@ import UserSwitcher from './components/UserSwitcher'
  */
 function App() {
 	const [userId, setUserId] = useState(1)
-	const [user, setUser] = useState(null)
+	const [users, setUsers] = useState([])
 	const [projects, setProjects] = useState([])
 	const [projectId, setProjectId] = useState(null)
 	const [error, setError] = useState(null)
 	const [loading, setLoading] = useState(true)
+	const [creatingUser, setCreatingUser] = useState(false)
 
-	/** 새 프로젝트를 만든 직후 그것을 바로 열어주려고 고를 id를 받는다. */
+	/**
+	 * 사용자 목록은 DB가 유일한 사실이라 매번 서버에 묻는다. 브라우저에 사본을 두면
+	 * 다른 탭에서 등록한 계정이 안 보이거나, 서버를 다시 띄운 뒤에도 목록에 남는다.
+	 */
+	const loadUsers = useCallback(async () => {
+		setUsers(await api.getUsers())
+	}, [])
+
+	useEffect(() => {
+		loadUsers().catch((e) => setError(e.message))
+	}, [loadUsers])
+
+/**
+	 * 새 프로젝트를 만든 직후 그것을 바로 열어주려고 고를 id를 받는다.
+	 * 목록에 없는 id면(방금 삭제된 프로젝트 등) 첫 번째로 되돌린다.
+	 */
 	const loadProjects = useCallback(
 		async (nextProjectId) => {
 			const list = await api.getMyProjects(userId)
 			setProjects(list)
-			setProjectId(nextProjectId ?? list[0]?.id ?? null)
+
+			const stillExists = list.some((p) => p.id === nextProjectId)
+			setProjectId(stillExists ? nextProjectId : (list[0]?.id ?? null))
 		},
 		[userId],
 	)
@@ -32,14 +51,12 @@ function App() {
 
 		setLoading(true)
 		setError(null)
-		setUser(null)
 		setProjects([])
 		setProjectId(null)
 
-		Promise.all([api.getUser(userId), api.getMyProjects(userId)])
-			.then(([loadedUser, list]) => {
+		api.getMyProjects(userId)
+			.then((list) => {
 				if (cancelled) return
-				setUser(loadedUser)
 				setProjects(list)
 				setProjectId(list[0]?.id ?? null)
 			})
@@ -57,6 +74,19 @@ function App() {
 
 	const selectedProject = projects.find((p) => p.id === projectId) ?? null
 
+	/** 프로젝트 정보나 멤버가 바뀐 뒤. 보고 있던 프로젝트는 그대로 두려고 지금 id를 넘긴다. */
+	const refreshProjects = useCallback(
+		() => loadProjects(projectId),
+		[loadProjects, projectId],
+	)
+
+	/** 등록한 계정이 드롭다운에 들어와 있어야 전환 결과가 제대로 보인다. */
+	const registerUser = async (created) => {
+		setCreatingUser(false)
+		await loadUsers()
+		setUserId(created.id)
+	}
+
 	return (
 		<>
 			<header className="header">
@@ -66,7 +96,12 @@ function App() {
 						API 문서
 					</a>
 				</div>
-				<UserSwitcher userId={userId} user={user} onChange={setUserId} />
+				<div className="header__user">
+					<UserSwitcher userId={userId} users={users} onChange={setUserId} />
+					<button type="button" onClick={() => setCreatingUser(true)}>
+						사용자 등록
+					</button>
+				</div>
 			</header>
 
 			{error && <p className="banner banner--error">{error}</p>}
@@ -86,7 +121,10 @@ function App() {
 					<TaskBoard
 						key={`${userId}-${selectedProject.id}`}
 						userId={userId}
+						users={users}
 						project={selectedProject}
+						onProjectChanged={refreshProjects}
+						onProjectDeleted={loadProjects}
 					/>
 				) : (
 					<section className="panel empty">
@@ -94,6 +132,10 @@ function App() {
 					</section>
 				)}
 			</div>
+
+			{creatingUser && (
+				<UserCreate onClose={() => setCreatingUser(false)} onCreated={registerUser} />
+			)}
 		</>
 	)
 }

@@ -105,8 +105,8 @@ class PermissionTest {
 			assertFails(() -> projectService.get(outsiderId, projectA), ErrorCode.NOT_PROJECT_MEMBER);
 			assertFails(() -> projectService.findMembers(outsiderId, projectA), ErrorCode.NOT_PROJECT_MEMBER);
 			assertFails(() -> taskService.get(outsiderId, projectA, taskInA), ErrorCode.NOT_PROJECT_MEMBER);
-			assertFails(() -> taskService.search(outsiderId, projectA, null, null, null, PageRequest.of(0, 20)),
-					ErrorCode.NOT_PROJECT_MEMBER);
+			assertFails(() -> taskService.search(outsiderId, projectA, null, null, null, false,
+					PageRequest.of(0, 20)), ErrorCode.NOT_PROJECT_MEMBER);
 		}
 
 		@Test
@@ -248,7 +248,7 @@ class PermissionTest {
 		@Test
 		@DisplayName("다른 프로젝트의 작업은 목록에 섞이지 않는다")
 		void 다른_프로젝트_작업_목록_차단() {
-			assertThat(taskService.search(ownerId, projectA, null, null, null, PageRequest.of(0, 20)))
+			assertThat(taskService.search(ownerId, projectA, null, null, null, false, PageRequest.of(0, 20)))
 					.extracting("id").containsExactly(taskInA);
 		}
 

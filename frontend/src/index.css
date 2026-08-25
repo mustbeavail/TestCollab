@@ -129,8 +129,9 @@ button.danger {
 	color: var(--muted);
 }
 
-.user-switcher input {
-	width: 5rem;
+/* 항목마다 설명이 붙어 길다. 헤더를 다 차지하지 않게 최대 폭을 둔다. */
+.user-switcher select {
+	max-width: 22rem;
 }
 
 .user-switcher__name {
@@ -433,4 +434,96 @@ button.danger {
 	.layout {
 		grid-template-columns: 1fr;
 	}
+}
+
+/* 사용자 전환 + 등록 버튼을 한 줄로 묶는다. */
+.header__user {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+/* 왼쪽에 제목·설명, 오른쪽 끝에 설정 버튼. 설명이 두 줄이 되어도 버튼은 제목 줄에 붙어 있게 한다. */
+.board__header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+/* 설정 창은 멤버 한 명을 한 줄에 담아야 해서 작업 상세 창보다 넓다. */
+.modal {
+	width: min(34rem, 100%);
+}
+
+/* 설정 창의 구획(정보 / 멤버 / 삭제). 사이에만 경계선을 둔다. */
+.settings__section {
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+	padding-bottom: 0.9rem;
+	border-bottom: 1px solid var(--border);
+}
+
+.settings__section:last-child {
+	padding-bottom: 0;
+	border-bottom: none;
+}
+
+.settings__section h4 {
+	margin: 0;
+	font-size: 0.9rem;
+}
+
+.member-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.member-list li {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+/* 이름·이메일이 길어도 역할 드롭다운과 제거 버튼을 밀어내지 않게 한다.
+   min-width: 0이 있어야 flex 항목에서 ellipsis가 동작한다. */
+.member__name {
+	flex: 1;
+	min-width: 0;
+	font-size: 0.9rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.member-add {
+	display: flex;
+	gap: 0.4rem;
+	flex-wrap: wrap;
+	padding-top: 0.6rem;
+	border-top: 1px dashed var(--border);
+}
+
+/* 첫 요소가 사용자 드롭다운이다. 설명이 붙어 길어 남은 자리를 모두 준다. */
+.member-add select:first-child {
+	flex: 1;
+	min-width: 0;
+}
+
+/* 삭제 구획만 생김새를 달리해 실수로 누르지 않게 한다. */
+.settings__danger {
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.settings__danger .hint {
+	margin: 0.15rem 0 0;
 }

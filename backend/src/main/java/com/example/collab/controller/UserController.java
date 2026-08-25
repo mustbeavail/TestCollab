@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * 사용자 API. 요청을 서비스에 넘기고 결과를 응답으로 바꾸는 일만 한다.
  * 사용자 API에만 X-User-Id가 없다. 인증이 구현 대상이 아니고 등록·조회에 걸린 권한 규칙도 없다.
@@ -29,6 +31,13 @@ public class UserController {
 	@Operation(summary = "사용자 등록", description = "이름과 이메일로 사용자를 등록한다. 이메일은 중복될 수 없다.")
 	public UserResponse register(@Valid @RequestBody UserCreateRequest request) {
 		return userService.register(request);
+	}
+
+	/** 프론트의 사용자 전환 드롭다운이 이 응답으로 채워진다. */
+	@GetMapping
+	@Operation(summary = "사용자 목록", description = "등록된 사용자를 id 오름차순으로 전부 돌려준다.")
+	public List<UserResponse> list() {
+		return userService.findAll();
 	}
 
 	@GetMapping("/{userId}")

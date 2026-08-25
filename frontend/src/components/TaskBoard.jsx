@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../api'
 import { ROLE, TASK_STATUS } from '../labels'
+import ProjectSettings from './ProjectSettings'
 import TaskDetail from './TaskDetail'
 
 const PAGE_SIZE = 10
@@ -9,14 +10,16 @@ const PAGE_SIZE = 10
  * 오른쪽 본문 — 고른 프로젝트의 작업 목록.
  * 검색·상태 필터·페이징·작업 생성을 한 화면에서 다루고, 행을 누르면 상세 창이 열린다.
  */
-export default function TaskBoard({ userId, project }) {
+export default function TaskBoard({ userId, users, project, onProjectChanged, onProjectDeleted }) {
 	const [members, setMembers] = useState([])
 	const [page, setPage] = useState(null)     // 스프링 Page 객체 그대로
 	const [keywordDraft, setKeywordDraft] = useState('')
 	const [keyword, setKeyword] = useState('') // 실제로 서버에 보낸 검색어
 	const [status, setStatus] = useState('')
+	const [assigneeId, setAssigneeId] = useState('')
 	const [pageNo, setPageNo] = useState(0)
 	const [selected, setSelected] = useState(null)
+	const [settingsOpen, setSettingsOpen] = useState(false)
 	const [error, setError] = useState(null)
 	const [loading, setLoading] = useState(true)
 
@@ -31,22 +34,40 @@ export default function TaskBoard({ userId, project }) {
 		setLoading(true)
 		setError(null)
 		try {
-			setPage(await api.getTasks(userId, project.id, { keyword, status, page: pageNo, size: PAGE_SIZE }))
+			setPage(await api.getTasks(userId, project.id, {
+				keyword, status, assigneeId, page: pageNo, size: PAGE_SIZE,
+			}))
 		} catch (e) {
 			setError(e.message)
 		} finally {
 			setLoading(false)
 		}
-	}, [userId, project.id, keyword, status, pageNo])
+	}, [userId, project.id, keyword, status, assigneeId, pageNo])
 
 	useEffect(() => {
 		loadTasks()
 	}, [loadTasks])
 
-	// 멤버 목록은 검색 조건과 무관해 프로젝트가 바뀔 때만 부른다.
-	useEffect(() => {
-		api.getMembers(userId, project.id).then(setMembers).catch(() => setMembers([]))
+	/** 검색 조건과 무관하지만 멤버를 더하거나 뺀 직후에도 다시 불러야 해서 함수로 뺐다. */
+	const loadMembers = useCallback(async () => {
+		try {
+			setMembers(await api.getMembers(userId, project.id))
+		} catch {
+			setMembers([])
+		}
 	}, [userId, project.id])
+
+	useEffect(() => {
+		loadMembers()
+	}, [loadMembers])
+
+	/**
+	 * 멤버가 바뀌면 셋을 함께 갱신한다. 빠진 사람이 담당자였다면 서버가 담당자를 비웠고,
+	 * 내 역할이 바뀌었다면 버튼 노출 기준도 달라진다.
+	 */
+	const refreshAfterMemberChange = async () => {
+		await Promise.all([loadMembers(), loadTasks(), onProjectChanged()])
+	}
 
 	/** 규칙은 백엔드와 같다. 차단은 서버가 하고, 여기서는 눌러야 403이 날 버튼을 숨길 뿐이다. */
 	const canEdit = (task) =>
@@ -59,8 +80,8 @@ export default function TaskBoard({ userId, project }) {
 		setPageNo(0)
 	}
 
-	const changeStatus = (value) => {
-		setStatus(value)
+	const changeFilter = (setter) => (value) => {
+		setter(value)
 		setPageNo(0)
 	}
 
@@ -98,6 +119,10 @@ export default function TaskBoard({ userId, project }) {
 						{project.description || '설명 없음'} · 내 역할 {ROLE[project.myRole]} · 멤버 {members.length}명
 					</p>
 				</div>
+				{/* 멤버 전원이 열 수 있다. 안에서 역할에 따라 고칠 수 있는 것이 갈린다. */}
+				<button type="button" onClick={() => setSettingsOpen(true)}>
+					설정
+				</button>
 			</header>
 
 			<div className="filters">
@@ -111,11 +136,30 @@ export default function TaskBoard({ userId, project }) {
 					<button type="submit">검색</button>
 				</form>
 
-				<select value={status} onChange={(e) => changeStatus(e.target.value)}>
+				<select
+					value={status}
+					onChange={(e) => changeFilter(setStatus)(e.target.value)}
+					aria-label="상태 필터"
+				>
 					<option value="">상태 전체</option>
 					{Object.entries(TASK_STATUS).map(([value, label]) => (
 						<option key={value} value={value}>
 							{label}
+						</option>
+					))}
+				</select>
+
+				<select
+					value={assigneeId}
+					onChange={(e) => changeFilter(setAssigneeId)(e.target.value)}
+					aria-label="담당자 필터"
+				>
+					<option value="">담당자 전체</option>
+					{/* 담당자가 비어 있는 작업만 보는 항목. 사람 목록과 성격이 달라 맨 앞에 둔다. */}
+					<option value={api.UNASSIGNED}>담당자 미지정</option>
+					{members.map((m) => (
+						<option key={m.userId} value={m.userId}>
+							{m.name}
 						</option>
 					))}
 				</select>
@@ -130,7 +174,11 @@ export default function TaskBoard({ userId, project }) {
 					onChange={(e) => setNewTitle(e.target.value)}
 					maxLength={200}
 				/>
-				<select value={newAssigneeId} onChange={(e) => setNewAssigneeId(e.target.value)}>
+				<select
+					value={newAssigneeId}
+					onChange={(e) => setNewAssigneeId(e.target.value)}
+					aria-label="새 작업 담당자"
+				>
 					<option value="">담당자 미지정</option>
 					{members.map((m) => (
 						<option key={m.userId} value={m.userId}>
@@ -207,6 +255,21 @@ export default function TaskBoard({ userId, project }) {
 						setSelected(null)
 						loadTasks()
 					}}
+				/>
+			)}
+			{settingsOpen && (
+				<ProjectSettings
+					userId={userId}
+					users={users}
+					project={project}
+					members={members}
+					onClose={() => setSettingsOpen(false)}
+					onChanged={onProjectChanged}
+					onDeleted={async () => {
+						setSettingsOpen(false)
+						await onProjectDeleted()
+					}}
+					onMembersChanged={refreshAfterMemberChange}
 				/>
 			)}
 		</section>

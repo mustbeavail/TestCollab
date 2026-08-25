@@ -89,11 +89,12 @@ public class TaskService {
 	}
 
 	/** 세 조건은 모두 선택 사항이라 null이면 무시된다. Page.map으로 페이징 정보를 유지한 채 DTO로 바꾼다. */
-	public Page<TaskResponse> search(Long userId, Long projectId, String keyword,
-	                                 TaskStatus status, Long assigneeId, Pageable pageable) {
+	public Page<TaskResponse> search(Long userId, Long projectId, String keyword, TaskStatus status,
+	                                 Long assigneeId, boolean unassignedOnly, Pageable pageable) {
 		requireMember(projectId, userId);
 
-		return taskRepository.search(projectId, keyword, status, assigneeId, stableSort(pageable))
+		return taskRepository
+				.search(projectId, keyword, status, assigneeId, unassignedOnly, stableSort(pageable))
 				.map(TaskResponse::from);
 	}
 

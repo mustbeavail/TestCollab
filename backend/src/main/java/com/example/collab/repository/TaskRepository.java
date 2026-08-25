@@ -27,6 +27,9 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 	 * left join fetch : 응답에 담당자 이름이 들어가는데 지연 로딩이라 그냥 두면 N+1이 난다.
 	 *                   담당자 없는 작업도 빠지면 안 되므로 left join이다.
 	 * countQuery      : 건수만 셀 때는 담당자를 읽을 이유가 없어 fetch를 뺀 쿼리를 따로 준다.
+	 *
+	 * 담당자 조건이 둘로 갈리는 이유: assigneeId는 값을 주지 않으면 "담당자를 안 따진다"는
+	 * 뜻이라 "담당자가 없는 작업만"을 표현할 수 없다. 뜻이 다른 조건이라 따로 받는다.
 	 */
 	@Query(value = """
 			select t from Task t
@@ -35,6 +38,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 			  and (:keyword is null or t.title like concat('%', :keyword, '%'))
 			  and (:status is null or t.status = :status)
 			  and (:assigneeId is null or t.assignee.id = :assigneeId)
+			  and (:unassignedOnly = false or t.assignee is null)
 			""",
 			countQuery = """
 					select count(t) from Task t
@@ -42,11 +46,13 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 					  and (:keyword is null or t.title like concat('%', :keyword, '%'))
 					  and (:status is null or t.status = :status)
 					  and (:assigneeId is null or t.assignee.id = :assigneeId)
+					  and (:unassignedOnly = false or t.assignee is null)
 					""")
 	Page<Task> search(@Param("projectId") Long projectId,
 	                  @Param("keyword") String keyword,
 	                  @Param("status") TaskStatus status,
 	                  @Param("assigneeId") Long assigneeId,
+	                  @Param("unassignedOnly") boolean unassignedOnly,
 	                  Pageable pageable);
 
 	/**

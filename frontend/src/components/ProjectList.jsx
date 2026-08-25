@@ -9,10 +9,14 @@ import { ROLE } from '../labels'
  */
 export default function ProjectList({ projects, selectedId, loading, userId, onSelect, onCreated }) {
 	const [name, setName] = useState('')
+	const [description, setDescription] = useState('')
 	const [error, setError] = useState(null)
 	const [saving, setSaving] = useState(false)
 
-	/** 만든 사람이 자동으로 OWNER가 된다. 만든 뒤 목록을 다시 불러오며 그 프로젝트를 골라 둔다. */
+	/**
+	 * 만든 사람이 자동으로 OWNER가 된다. 만든 뒤 목록을 다시 불러오며 그 프로젝트를 골라 둔다.
+	 * 설명을 비우면 null로 보낸다. 빈 문자열로 두면 "설명 없음"과 구분되는데 화면에서는 같다.
+	 */
 	const submit = async (event) => {
 		event.preventDefault()
 		if (!name.trim()) return
@@ -20,8 +24,12 @@ export default function ProjectList({ projects, selectedId, loading, userId, onS
 		setSaving(true)
 		setError(null)
 		try {
-			const created = await api.createProject(userId, { name: name.trim(), description: '' })
+			const created = await api.createProject(userId, {
+				name: name.trim(),
+				description: description.trim() || null,
+			})
 			setName('')
+			setDescription('')
 			await onCreated(created.id)
 		} catch (e) {
 			setError(e.message)
@@ -64,6 +72,13 @@ export default function ProjectList({ projects, selectedId, loading, userId, onS
 					value={name}
 					onChange={(e) => setName(e.target.value)}
 					maxLength={100}
+				/>
+				<input
+					type="text"
+					placeholder="설명 (선택)"
+					value={description}
+					onChange={(e) => setDescription(e.target.value)}
+					maxLength={500}
 				/>
 				<button type="submit" disabled={saving || !name.trim()}>
 					{saving ? '만드는 중…' : '만들기'}

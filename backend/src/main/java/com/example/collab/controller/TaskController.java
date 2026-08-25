@@ -61,10 +61,13 @@ public class TaskController {
 			@Parameter(description = "담당자 사용자 ID 필터", example = "3")
 			@RequestParam(required = false) Long assigneeId,
 
+			@Parameter(description = "담당자가 지정되지 않은 작업만 보기", example = "false")
+			@RequestParam(defaultValue = "false") boolean unassignedOnly,
+
 			@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
 			Pageable pageable
 	) {
-		return taskService.search(userId, projectId, keyword, status, assigneeId, pageable);
+		return taskService.search(userId, projectId, keyword, status, assigneeId, unassignedOnly, pageable);
 	}
 
 	@GetMapping("/{taskId}")
