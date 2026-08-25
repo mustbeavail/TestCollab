@@ -18,12 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 작업 관련 HTTP 요청을 받는 진입점.
- *
- * 작업은 항상 어떤 프로젝트에 속하고 권한도 프로젝트 기준으로 판정되므로,
- * 경로를 프로젝트 하위에 둔다. 프로젝트 식별자가 경로에 항상 들어가면
- * 권한 검사와 조회 조건에서 그것을 빠뜨리기 어려워진다.
- * ({projectId}는 각 메서드가 @PathVariable로 받는다)
+ * 작업 API. 경로를 프로젝트 하위에 둔다.
+ * projectId가 경로에 항상 들어가면 권한 검사와 조회 조건에서 그것을 빠뜨리기 어려워진다.
  */
 @RestController
 @RequestMapping("/api/projects/{projectId}/tasks")
@@ -47,15 +43,7 @@ public class TaskController {
 		return taskService.create(userId, projectId, request);
 	}
 
-	/**
-	 * 작업 목록을 조회한다.
-	 *
-	 * 세 필터는 모두 선택 사항이다(required = false). 값을 주지 않으면 그 조건은 무시된다.
-	 *
-	 * Pageable을 파라미터로 두면 스프링이 요청의 page·size·sort 값을 채워 넘겨준다.
-	 * @PageableDefault는 그 값들이 없을 때 쓸 기본값이다.
-	 * 최신 작업이 먼저 보이도록 createdAt 내림차순을 기본 정렬로 둔다.
-	 */
+	/** 세 필터는 모두 선택 사항이다. Pageable은 요청의 page·size·sort로 스프링이 채워준다. */
 	@GetMapping
 	@Operation(summary = "작업 목록 조회",
 			description = "제목 검색·상태 필터·담당자 필터와 페이징을 지원한다. 다른 프로젝트의 작업은 섞이지 않는다.")

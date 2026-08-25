@@ -13,18 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 프로젝트와 프로젝트 멤버 관련 HTTP 요청을 받는 진입점.
- *
- * 멤버 관리는 프로젝트에 종속된 자원이므로
- * /api/projects/{projectId}/members 형태의 하위 경로로 둔다.
- *
- * 인증이 없는 과제이므로 요청자 식별자는 X-User-Id 헤더로 받는다.
- * 쿼리 파라미터가 아니라 헤더로 두는 이유는, 요청자 식별이 모든 API에
- * 공통으로 붙는 값이라 개별 API의 입력과 같은 자리에 섞이면
- * 어느 쪽이 무엇인지 흐려지기 때문이다.
- *
- * 이 계층은 요청을 받아 서비스에 넘기고 결과를 응답으로 바꾸는 일만 한다.
- * 권한 판정은 전부 ProjectService가 한다.
+ * 프로젝트·멤버 API. 권한 판정은 전부 ProjectService가 한다.
+ * 요청자 식별자는 X-User-Id 헤더로 받는다. 모든 API에 공통으로 붙는 값이라
+ * 쿼리 파라미터에 두면 각 API의 입력과 섞여 구분이 흐려진다.
  */
 @RestController
 @RequestMapping("/api/projects")
@@ -79,12 +70,6 @@ public class ProjectController {
 		return projectService.update(userId, projectId, request);
 	}
 
-	/**
-	 * 프로젝트를 삭제한다.
-	 *
-	 * @ResponseStatus(NO_CONTENT) : 돌려줄 본문이 없으므로 204로 응답한다.
-	 *                               반환 타입이 void라 본문 없이 상태 코드만 나간다.
-	 */
 	@DeleteMapping("/{projectId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Operation(summary = "프로젝트 삭제", description = "OWNER만 할 수 있다. 딸린 작업과 멤버도 함께 삭제된다.")

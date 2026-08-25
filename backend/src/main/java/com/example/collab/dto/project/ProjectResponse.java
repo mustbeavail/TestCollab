@@ -6,22 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
-/**
- * 프로젝트 정보 응답 본문.
- *
- * myRole 필드가 있는 이유:
- * 같은 프로젝트라도 보는 사람에 따라 할 수 있는 일이 다르다. 이 값을 함께 내려주면
- * 프론트가 수정·삭제 버튼을 보여줄지 말지를 서버에 다시 묻지 않고 판단할 수 있다.
- * 프로젝트 자체의 속성이 아니라 "이 응답을 받는 사람"의 속성이라
- * 엔티티에서 바로 꺼낼 수 없고, 변환할 때 따로 넘겨받는다.
- *
- * @param id          프로젝트 식별자
- * @param name        이름
- * @param description 설명(없으면 null)
- * @param myRole      이 응답을 받는 사람의 역할
- * @param createdAt   생성 시각
- * @param updatedAt   마지막 수정 시각
- */
+/** 프로젝트 정보 응답 본문. myRole은 요청자 기준이라 같은 프로젝트도 사람마다 다르게 나간다. */
 @Schema(description = "프로젝트 정보")
 public record ProjectResponse(
 
@@ -44,14 +29,6 @@ public record ProjectResponse(
 		LocalDateTime updatedAt
 ) {
 
-	/**
-	 * 엔티티와 요청자의 역할을 합쳐 응답 DTO로 변환한다.
-	 *
-	 * @param project 변환할 프로젝트
-	 * @param myRole  이 응답을 받는 사람의 역할. 호출하는 서비스가
-	 *                권한 검사 과정에서 이미 조회해둔 ProjectMember에서 꺼내 넘긴다.
-	 *                (역할을 얻으려고 조회를 한 번 더 하지 않는다)
-	 */
 	public static ProjectResponse from(Project project, Role myRole) {
 		return new ProjectResponse(
 				project.getId(),

@@ -32,22 +32,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * 역할별 권한 규칙과 프로젝트 간 데이터 격리를 검증한다.
- *
- * 테스트를 두는 이유:
- * 역할 3종 × 기능 8종의 분기가 촘촘해 눈으로 훑으면 구멍을 놓치기 쉽다.
- * 특히 "비멤버가 조회조차 못 하는가", "다른 프로젝트의 데이터가 섞이지 않는가",
- * "OWNER가 항상 최소 1명 남는가"는 빠뜨려도 정상 흐름에서는 드러나지 않는다.
- *
- * @Transactional을 붙인 이유:
- * 각 테스트가 끝나면 자동으로 롤백되어 다음 테스트가 깨끗한 상태에서 시작한다.
- * 여기서는 커밋 시점의 동작을 볼 일이 없어 롤백해도 무방하다.
- * (커밋이 필요한 동시 수정 검증은 TaskConcurrentUpdateTest에 따로 있다)
+ * 역할 3종 × 기능 8종의 분기가 촘촘해 눈으로는 구멍을 놓치기 쉬운 부분이다.
  *
  * 준비된 데이터:
- *   프로젝트 A — owner(OWNER), admin(ADMIN), member(MEMBER)
- *   프로젝트 B — outsider(OWNER)          ← A와 완전히 분리된 프로젝트
- *   A의 작업   — member가 담당
- *   B의 작업   — 담당자 없음
+ *   프로젝트 A — owner(OWNER), admin(ADMIN), member(MEMBER), 작업 하나(담당자 member)
+ *   프로젝트 B — outsider(OWNER), 작업 하나(담당자 없음)   ← A와 완전히 분리
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -320,14 +309,9 @@ class PermissionTest {
 		void 담당자만_비워진다() {
 			projectService.removeMember(ownerId, projectA, memberId);
 
-			// 담당자를 비우는 쿼리는 영속성 컨텍스트를 거치지 않고 DB로 직행하는
-			// 벌크 UPDATE다. 그래서 이 테스트가 setUp에서 이미 읽어둔 Task 객체는
-			// 담당자가 채워진 옛 상태로 1차 캐시에 남아 있다.
-			// clear()로 캐시를 비워야 아래 조회가 DB의 실제 값을 다시 읽어온다.
-			//
-			// 운영에서는 이 문제가 생기지 않는다. 멤버 제거 요청은 자기 트랜잭션 안에서
-			// Task를 한 번도 읽지 않고 끝나기 때문이다. 테스트가 서비스 호출과 검증을
-			// 같은 트랜잭션으로 묶기 때문에 드러나는 상황이다.
+			// 담당자를 비우는 쿼리는 벌크 UPDATE라 1차 캐시에 옛 값이 남는다.
+			// 운영에서는 멤버 제거 요청이 Task를 읽지 않아 생기지 않고, 테스트가 호출과 검증을
+			// 같은 트랜잭션으로 묶어서 드러나는 상황이다.
 			entityManager.clear();
 
 			Task task = taskRepository.findById(taskInA).orElseThrow();
